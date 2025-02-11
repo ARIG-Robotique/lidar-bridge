@@ -9,11 +9,11 @@ ROOT_DIR=$(pwd)
 if [ "${#}" -eq 1 ] ; then
   BUILD_NAME="${1}"
 else
-  echo "Le nombre d'argument doit etre definie (local, odin ou nerell)"
+  echo "Le nombre d'argument doit etre definie (local ou raspi)"
   exit 1
 fi
-if [ "${BUILD_NAME}" != "local" ] && [ "${BUILD_NAME}" != "odin" ] && [ "${BUILD_NAME}" != "nerell" ] ; then
-  echo "Le build name doit être local, odin ou nerell"
+if [ "${BUILD_NAME}" != "local" ] && [ "${BUILD_NAME}" != "raspi" ] ; then
+  echo "Le build name doit être local ou raspi"
   exit 2
 fi
 BUILD_DIR=${ROOT_DIR}/build-${BUILD_NAME}

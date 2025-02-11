@@ -22,7 +22,7 @@ set(DOWNLOAD_DIR "downloads")
 
 # Pour faire de la cross compilation
 if (DEFINED BUILD_NAME)
-    if (${BUILD_NAME} STREQUAL "odin" OR ${BUILD_NAME} STREQUAL "nerell")
+    if (${BUILD_NAME} STREQUAL "raspi")
         if (UNIX AND NOT APPLE)
             set(ARM_CROSS_COMPILER_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../raspi-crosstools/build-tools/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu)
             set(ARM_BIN_PREFIX bin/aarch64-linux-gnu-)
