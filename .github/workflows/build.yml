@@ -18,6 +18,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache downloads packages
+        uses: actions/cache@v4
+        with:
+          key: downloads
+          path: downloads
+
       - name: Build
         run: ./build.sh local
 
