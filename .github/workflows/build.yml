@@ -1,0 +1,30 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+
+    tags:
+      - v*
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: ./build.sh local
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && (github.ref_name == 'master' || github.ref_type == 'tag')
+        with:
+          name: build-local-${{ github.ref_name }}
+          path: build-local
+          retention-days: 1
