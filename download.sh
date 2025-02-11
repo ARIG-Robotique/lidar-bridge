@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ROOT_DIR=$(pwd)
-DOWNLOAD_DIR=${ROOT_DIR}/download
+DOWNLOAD_DIR=${ROOT_DIR}/downloads
 
 RPLIDAR_SDK_VERSION=v1.12.0
 RPLIDAR_SDK_DIR=rplidar_sdk

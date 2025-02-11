@@ -18,7 +18,7 @@ function (checkProgram name)
 endfunction(checkProgram)
 
 # Variable pour les dépendances externes
-set(DOWNLOAD_DIR "download")
+set(DOWNLOAD_DIR "downloads")
 
 # Pour faire de la cross compilation
 if (DEFINED BUILD_NAME)
