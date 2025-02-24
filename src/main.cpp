@@ -1,7 +1,7 @@
 /* RPLIDAR Bridge Application */
 #include <iostream>
 #include "network/SocketHelper.h"
-#include "lidar/slamtech/RpLidarHelper.h"
+#include "lidar/slamtech/RppLidarHelper.h"
 #include "lidar/ldrobot/Ld19LidarHelper.h"
 
 void printUsage();
@@ -52,7 +52,7 @@ int main(int argc, const char **argv) {
     // Initialisation Lidar driver
     AbstractLidarHelper* lidar;
     if (lidarDriver == "rplidar") {
-        lidar = new RpLidarHelper(comFile, baudrate);
+        lidar = new RppLidarHelper(comFile, baudrate);
     } else if (lidarDriver == "ldlidar") {
         lidar = new Ld19LidarHelper(comFile);
     }
