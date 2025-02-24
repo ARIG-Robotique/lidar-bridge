@@ -4,9 +4,9 @@
 
 #include <iostream>
 #include <sstream>
-#include "RppLidarHelper.h"
+#include "RpLidarHelper.h"
 
-void RppLidarHelper::init() {
+void RpLidarHelper::init() {
     // create the driver instance
     this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
@@ -27,14 +27,14 @@ void RppLidarHelper::init() {
     }
 }
 
-void RppLidarHelper::end() {
+void RpLidarHelper::end() {
     this->stopScan();
     this->driver->disconnect();
 
     RPlidarDriver::DisposeDriver(this->driver);
 }
 
-JsonResult RppLidarHelper::getDeviceInfo() {
+JsonResult RpLidarHelper::getDeviceInfo() {
     rplidar_response_device_info_t deviceInfo;
     if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
         JsonResult fail;
@@ -75,7 +75,7 @@ JsonResult RppLidarHelper::getDeviceInfo() {
     return r;
 }
 
-JsonResult RppLidarHelper::getHealth() {
+JsonResult RpLidarHelper::getHealth() {
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
         JsonResult fail;
@@ -106,7 +106,7 @@ JsonResult RppLidarHelper::getHealth() {
     return r;
 }
 
-JsonResult RppLidarHelper::startScan(JsonQuery q) {
+JsonResult RpLidarHelper::startScan(JsonQuery q) {
     if (IS_FAIL(this->driver->startMotor())) {
         JsonResult r;
         r.action = q.action;
@@ -124,7 +124,7 @@ JsonResult RppLidarHelper::startScan(JsonQuery q) {
     return this->setMotorSpeed(q);
 }
 
-JsonResult RppLidarHelper::stopScan() {
+JsonResult RpLidarHelper::stopScan() {
     JsonResult r;
     r.action = STOP_SCAN;
     r.status = RESPONSE_OK;
@@ -141,7 +141,7 @@ JsonResult RppLidarHelper::stopScan() {
     return r;
 }
 
-JsonResult RppLidarHelper::setMotorSpeed(JsonQuery q) {
+JsonResult RpLidarHelper::setMotorSpeed(JsonQuery q) {
     JsonResult r;
     r.action = q.action;
     r.data = q.data;
@@ -157,7 +157,7 @@ JsonResult RppLidarHelper::setMotorSpeed(JsonQuery q) {
     return r;
 }
 
-u_result RppLidarHelper::setMotorSpeed(_u16 speed) {
+u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
     if (speed > MAX_MOTOR_PWM) {
         speed = MAX_MOTOR_PWM;
     } else if (speed < 0) {
@@ -166,7 +166,7 @@ u_result RppLidarHelper::setMotorSpeed(_u16 speed) {
     return this->driver->setMotorPWM(speed);
 }
 
-JsonResult RppLidarHelper::grabScanData() {
+JsonResult RpLidarHelper::grabScanData() {
     JsonResult r;
     r.action = GRAB_DATA;
 

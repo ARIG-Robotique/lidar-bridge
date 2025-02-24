@@ -10,12 +10,12 @@
 
 using namespace rp::standalone::rplidar;
 
-class RppLidarHelper final : public AbstractLidarHelper {
+class RpLidarHelper final : public AbstractLidarHelper {
 
 public:
-    explicit RppLidarHelper(const string &comFile) : RppLidarHelper(comFile, 115200) { }
+    explicit RpLidarHelper(const string &comFile) : RpLidarHelper(comFile, 115200) { }
 
-    RppLidarHelper(const string &comFile, unsigned int baudrate) : AbstractLidarHelper(comFile) {
+    RpLidarHelper(const string &comFile, unsigned int baudrate) : AbstractLidarHelper(comFile) {
         this->baudrate = baudrate;
         this->driver = nullptr;
     }
