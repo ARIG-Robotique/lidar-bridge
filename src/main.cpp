@@ -14,6 +14,14 @@ int main(int argc, const char **argv) {
     string socketType = argv[1];
     string socketConf = argv[2];
     string lidarDriver = argv[3];
+    string comFile = "/dev/ttyUSB0";
+    unsigned int baudrate = 115200;
+    if (argc > 4) {
+        comFile = argv[4];
+    }
+    if (argc > 5) {
+        baudrate = atoi(argv[5]);
+    }
 
     // Initialisation de la socket
     SocketHelper socket(socketType);
@@ -43,7 +51,7 @@ int main(int argc, const char **argv) {
     // Initialisation Lidar driver
     AbstractLidarHelper* lidar;
     if (lidarDriver == "rplidar") {
-        lidar = new RPLidarHelper();
+        lidar = new RpLidarHelper(comFile, baudrate);
     } else if (lidarDriver == "ldlidar") {
         // TODO : Implement LDLidar when it is received !
         cerr << "LDLIDAR NOT IMPLEMENTED" << endl;
@@ -109,6 +117,6 @@ int main(int argc, const char **argv) {
 }
 
 void printUsage() {
-    cerr << "Usage socket unix : lidar_bridge unix /tmp/socket.sock rplidar|ldlidar [debug]" << endl;
-    cerr << "Usage socket inet : lidar_bridge inet 8686 rplidar|ldlidar [debug]" << endl;
+    cerr << "Usage socket unix : lidar_bridge unix /tmp/socket.sock rplidar|ldlidar [comFile] [baudrate]" << endl;
+    cerr << "Usage socket inet : lidar_bridge inet 8686 rplidar|ldlidar [comFile] [baudrate]" << endl;
 }
