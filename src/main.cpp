@@ -2,6 +2,7 @@
 #include <iostream>
 #include "network/SocketHelper.h"
 #include "lidar/slamtech/RpLidarHelper.h"
+#include "lidar/ldrobot/Ld19LidarHelper.h"
 
 void printUsage();
 
@@ -53,9 +54,7 @@ int main(int argc, const char **argv) {
     if (lidarDriver == "rplidar") {
         lidar = new RpLidarHelper(comFile, baudrate);
     } else if (lidarDriver == "ldlidar") {
-        // TODO : Implement LDLidar when it is received !
-        cerr << "LDLIDAR NOT IMPLEMENTED" << endl;
-        return 4;
+        lidar = new Ld19LidarHelper(comFile);
     }
     lidar->init();
 
