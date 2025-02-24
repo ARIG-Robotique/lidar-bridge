@@ -14,7 +14,8 @@ class AbstractLidarHelper {
 
 public:
 
-  AbstractLidarHelper(string comFile, unsigned int baudrate);
+  explicit AbstractLidarHelper(string comFile);
+  virtual ~AbstractLidarHelper() = default;
 
   virtual void init() = 0;
   virtual void end() = 0;
@@ -30,9 +31,9 @@ public:
 
 protected:
   string comFile;
-  unsigned int baudrate;
 
   JsonResult notImplemented(string action);
+  float adjustAngle(float angle);
 };
 
 #endif //ABSTRACTLIDARHELPER_H

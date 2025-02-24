@@ -4,9 +4,9 @@
 
 #include <iostream>
 #include <sstream>
-#include "RPLidarHelper.h"
+#include "RpLidarHelper.h"
 
-void RPLidarHelper::init() {
+void RpLidarHelper::init() {
     // create the driver instance
     this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
@@ -27,14 +27,14 @@ void RPLidarHelper::init() {
     }
 }
 
-void RPLidarHelper::end() {
+void RpLidarHelper::end() {
     this->stopScan();
     this->driver->disconnect();
 
     RPlidarDriver::DisposeDriver(this->driver);
 }
 
-JsonResult RPLidarHelper::getDeviceInfo() {
+JsonResult RpLidarHelper::getDeviceInfo() {
     rplidar_response_device_info_t deviceInfo;
     if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
         JsonResult fail;
@@ -75,7 +75,7 @@ JsonResult RPLidarHelper::getDeviceInfo() {
     return r;
 }
 
-JsonResult RPLidarHelper::getHealth() {
+JsonResult RpLidarHelper::getHealth() {
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
         JsonResult fail;
@@ -106,7 +106,7 @@ JsonResult RPLidarHelper::getHealth() {
     return r;
 }
 
-JsonResult RPLidarHelper::startScan(JsonQuery q) {
+JsonResult RpLidarHelper::startScan(JsonQuery q) {
     if (IS_FAIL(this->driver->startMotor())) {
         JsonResult r;
         r.action = q.action;
@@ -124,7 +124,7 @@ JsonResult RPLidarHelper::startScan(JsonQuery q) {
     return this->setMotorSpeed(q);
 }
 
-JsonResult RPLidarHelper::stopScan() {
+JsonResult RpLidarHelper::stopScan() {
     JsonResult r;
     r.action = STOP_SCAN;
     r.status = RESPONSE_OK;
@@ -141,7 +141,7 @@ JsonResult RPLidarHelper::stopScan() {
     return r;
 }
 
-JsonResult RPLidarHelper::setMotorSpeed(JsonQuery q) {
+JsonResult RpLidarHelper::setMotorSpeed(JsonQuery q) {
     JsonResult r;
     r.action = q.action;
     r.data = q.data;
@@ -157,7 +157,7 @@ JsonResult RPLidarHelper::setMotorSpeed(JsonQuery q) {
     return r;
 }
 
-u_result RPLidarHelper::setMotorSpeed(_u16 speed) {
+u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
     if (speed > MAX_MOTOR_PWM) {
         speed = MAX_MOTOR_PWM;
     } else if (speed < 0) {
@@ -166,7 +166,7 @@ u_result RPLidarHelper::setMotorSpeed(_u16 speed) {
     return this->driver->setMotorPWM(speed);
 }
 
-JsonResult RPLidarHelper::grabScanData() {
+JsonResult RpLidarHelper::grabScanData() {
     JsonResult r;
     r.action = GRAB_DATA;
 
@@ -179,29 +179,20 @@ JsonResult RPLidarHelper::grabScanData() {
 
         int ignored = 0;
         json scanData = json::array();
-        for (int pos = 0; pos < (int) nodeCount ; ++pos) {
-            float distanceMm = nodes[pos].dist_mm_q2 / 4.0f;
+        for (auto node : nodes) {
+            float distanceMm = node.dist_mm_q2 / 4.0f;
             if ((distanceMm < 150) || (distanceMm > 3600)) {
                 ignored++;
                 continue;
             }
 
-            float angleDeg = (nodes[pos].angle_z_q14 * 90.0f) / 16384.0f;
-            bool syncBit = nodes[pos].flag;
-            int quality = nodes[pos].quality;
-
-            // Transposition des angles dans le repère robot
-            if (angleDeg < 180) {
-                angleDeg *= -1;
-            } else {
-                angleDeg = 360 - angleDeg;
-            }
+            float angleDeg = this->adjustAngle((node.angle_z_q14 * 90.0f) / 16384.0f);
 
             json v;
             v["angleDeg"] = angleDeg;
             v["distanceMm"] = distanceMm;
-            v["syncBit"] = syncBit;
-            v["quality"] = quality;
+            v["syncBit"] = node.flag;
+            v["quality"] = node.quality;
             scanData.push_back(v);
         }
 

@@ -5,9 +5,8 @@
 #include "AbstractLidarHelper.h"
 #include <string>
 
-AbstractLidarHelper::AbstractLidarHelper(string comFile, unsigned int baudrate) {
+AbstractLidarHelper::AbstractLidarHelper(string comFile) {
   this->comFile = std::move(comFile);
-  this->baudrate = baudrate;
 }
 
 JsonResult AbstractLidarHelper::getDeviceInfo() {
@@ -37,4 +36,14 @@ JsonResult AbstractLidarHelper::notImplemented(string action){
     notImplemented.action = action;
     notImplemented.errorMessage = "Not yet implemented";
     return notImplemented;
+}
+
+float AbstractLidarHelper::adjustAngle(float angleDeg) {
+  // Transposition des angles dans le repère robot
+  if (angleDeg < 180) {
+    angleDeg *= -1;
+  } else {
+    angleDeg = 360 - angleDeg;
+  }
+  return angleDeg;
 }

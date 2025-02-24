@@ -2,18 +2,23 @@
 // Created by gregorydepuille@sglk.local on 27/02/17.
 //
 
-#ifndef RPLIDAR_BRIDGE_RPLIDARHELPER_H
-#define RPLIDAR_BRIDGE_RPLIDARHELPER_H
+#ifndef LIDAR_BRIDGE_RPLIDARHELPER_H
+#define LIDAR_BRIDGE_RPLIDARHELPER_H
 
 #include <rplidar.h>
 #include "../AbstractLidarHelper.h"
 
 using namespace rp::standalone::rplidar;
 
-class RPLidarHelper final : public AbstractLidarHelper {
+class RpLidarHelper final : public AbstractLidarHelper {
 
 public:
-    RPLidarHelper(string comFile = "/dev/ttyUSB0", unsigned int baudrate = 115200) : AbstractLidarHelper(comFile, baudrate) {};
+    explicit RpLidarHelper(const string &comFile) : RpLidarHelper(comFile, 115200) { }
+
+    RpLidarHelper(const string &comFile, unsigned int baudrate) : AbstractLidarHelper(comFile) {
+        this->baudrate = baudrate;
+        this->driver = nullptr;
+    }
 
     void init() override;
     void end() override;
@@ -31,8 +36,9 @@ private:
     const uint16_t MAX_MOTOR_PWM = 1023;
 
     RPlidarDriver * driver;
+    unsigned int baudrate;
     vector<RplidarScanMode> scanModes;
     u_result setMotorSpeed(_u16 speed);
 };
 
-#endif //RPLIDAR_BRIDGE_RPLIDARHELPER_H
+#endif //LIDAR_BRIDGE_RPLIDARHELPER_H
