@@ -14,7 +14,6 @@ class AbstractLidarHelper {
 
 public:
 
-  explicit AbstractLidarHelper(string comFile);
   virtual ~AbstractLidarHelper() = default;
 
   virtual void init() = 0;

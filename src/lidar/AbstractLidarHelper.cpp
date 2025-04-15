@@ -5,10 +5,6 @@
 #include "AbstractLidarHelper.h"
 #include <string>
 
-AbstractLidarHelper::AbstractLidarHelper(string comFile) {
-  this->comFile = std::move(comFile);
-}
-
 JsonResult AbstractLidarHelper::getDeviceInfo() {
   return notImplemented(DEVICE_INFO);
 }
