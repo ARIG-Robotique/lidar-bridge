@@ -15,6 +15,11 @@ class AbstractLidarHelper {
 public:
 
   virtual ~AbstractLidarHelper() = default;
+  explicit AbstractLidarHelper(string comFile) {
+    this->comFile = std::move(comFile);
+    this->reversed = false;
+    this->angleOffset = 0;
+  }
 
   virtual void init() = 0;
   virtual void end() = 0;
@@ -28,8 +33,13 @@ public:
 
   virtual JsonResult grabScanData();
 
+  JsonResult setConfig(JsonQuery q);
+
 protected:
   string comFile;
+
+  bool reversed;
+  int8_t angleOffset;
 
   JsonResult notImplemented(string action);
   float adjustAngle(float angle);

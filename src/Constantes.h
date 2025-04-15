@@ -18,6 +18,7 @@ using json = nlohmann::json;
 #define START_SCAN   "START_SCAN"
 #define STOP_SCAN    "STOP_SCAN"
 #define SET_SPEED    "SET_SPEED"
+#define SET_CONFIG   "SET_CONFIG"
 #define GRAB_DATA    "GRAB_DATA"
 
 #define EXIT            "EXIT"

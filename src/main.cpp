@@ -89,6 +89,9 @@ int main(int argc, const char **argv) {
         } else if (query.action == SET_SPEED) {
             result = lidar->setMotorSpeed(query);
 
+        } else if (query.action == SET_CONFIG) {
+            result = lidar->setConfig(query);
+
         } else if (query.action == GRAB_DATA) {
             result = lidar->grabScanData();
 
