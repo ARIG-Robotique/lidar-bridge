@@ -46,8 +46,7 @@ JsonResult RpLidarHelper::getDeviceInfo() {
 
     // Récupération du numéro de série
     ostringstream serialStream;
-    for (int i = 0 ; i < 16 ; i ++) {
-        _u8 v = deviceInfo.serialnum[i];
+    for (unsigned char v : deviceInfo.serialnum) {
         char buff[3];
         snprintf(buff, sizeof(buff), "%02X", v);
         string tmp = buff;
@@ -147,7 +146,7 @@ JsonResult RpLidarHelper::setMotorSpeed(JsonQuery q) {
     r.data = q.data;
     u_result result = RESULT_OK;
     if (!q.data["speed"].is_null()) {
-        result = this->setMotorSpeed((_u16) q.data["speed"]);
+        result = this->setMotorSpeed(q.data["speed"]);
     }
     if (IS_FAIL(result)) {
         r.status = RESPONSE_ERROR;
