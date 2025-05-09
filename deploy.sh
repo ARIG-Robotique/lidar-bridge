@@ -9,7 +9,7 @@ if [ "${ROBOT_NAME}" != "nerell" ] && [ "${ROBOT_NAME}" != "odin" ] ; then
 fi
 
 echo "Compilation ..."
-./build.sh "${ROBOT_NAME}"
+./build.sh raspi
 
 echo "Déploiement Applicatif ..."
-scp "./build-${ROBOT_NAME}/bin/lidar_bridge" "${ROBOT_NAME}:$INSTALL_DIR/"
+scp "./build-raspi/bin/lidar_bridge" "${ROBOT_NAME}.local:$INSTALL_DIR/"
