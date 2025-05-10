@@ -19,6 +19,8 @@ public:
     this->comFile = std::move(comFile);
     this->reversed = false;
     this->angleOffset = 0;
+    this->excludeLowerThanMm = 150;
+    this->excludeGreaterThanMm = 3600;
   }
 
   virtual void init() = 0;
@@ -40,6 +42,8 @@ protected:
 
   bool reversed;
   int8_t angleOffset;
+  int16_t excludeLowerThanMm;
+  int16_t excludeGreaterThanMm;
 
   JsonResult notImplemented(string action);
   float adjustAngle(float angle);

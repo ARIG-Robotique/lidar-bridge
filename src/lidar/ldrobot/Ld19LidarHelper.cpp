@@ -69,7 +69,7 @@ JsonResult Ld19LidarHelper::grabScanData() {
 
     for (auto point : laser_scan) {
       float distanceMm = point.distance;
-      if ((distanceMm < 150) || (distanceMm > 3600)) {
+      if ((distanceMm < this->excludeLowerThanMm) || (distanceMm > this->excludeGreaterThanMm)) {
         this->last_ignored++;
         continue;
       }

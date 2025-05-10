@@ -180,7 +180,7 @@ JsonResult RpLidarHelper::grabScanData() {
         json scanData = json::array();
         for (auto node : nodes) {
             float distanceMm = node.dist_mm_q2 / 4.0f;
-            if ((distanceMm < 150) || (distanceMm > 3600)) {
+            if ((distanceMm < this->excludeLowerThanMm) || (distanceMm > this->excludeGreaterThanMm)) {
                 ignored++;
                 continue;
             }
