@@ -172,8 +172,9 @@ JsonResult RpLidarHelper::grabScanData() {
     rplidar_response_measurement_node_hq_t nodes[8192];
     size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
 
-    u_result res = this->driver->grabScanDataHq(nodes, nodeCount);
-    if (IS_OK(res)) {
+    u_result resScan = this->driver->grabScanDataHq(nodes, nodeCount);
+    u_result resAscend = this->driver->ascendScanData(nodes, nodeCount);
+    if (IS_OK(resScan) && IS_OK(resAscend)) {
         r.status = RESPONSE_OK;
 
         int ignored = 0;
