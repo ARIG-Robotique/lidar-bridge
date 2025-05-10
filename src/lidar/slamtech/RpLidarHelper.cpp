@@ -20,11 +20,14 @@ void RpLidarHelper::init() {
         exit(3);
     }
 
+    // NON SUPPORTER PAR LES VIEUX FIRMWARE
     // get scan modes
+    /*
     if (IS_FAIL(this->driver->getAllSupportedScanModes(this->scanModes))) {
         cerr << "Error, cannot get all supported scan modes";
         exit(4);
     }
+    */
 }
 
 void RpLidarHelper::end() {
