@@ -15,7 +15,7 @@ int main(int argc, const char **argv) {
     string socketType = argv[1];
     string socketConf = argv[2];
     string lidarDriver = argv[3];
-    string comFile = "/dev/ttyUSB0";
+    string comFile = "/dev/" + lidarDriver;
     unsigned int baudrate = 115200;
     if (argc > 4) {
         comFile = argv[4];
