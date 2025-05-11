@@ -36,7 +36,9 @@ private:
     RPlidarDriver * driver;
     unsigned int baudrate;
     //vector<RplidarScanMode> scanModes;
+
     u_result setMotorSpeed(_u16 speed);
+    void reconnectLidarIfNeeded();
 };
 
 #endif //LIDAR_BRIDGE_RPLIDARHELPER_H
