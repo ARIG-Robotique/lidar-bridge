@@ -13,6 +13,7 @@ void RpLidarHelper::init() {
     cout << "RpLidarHelper::init()" << endl;
 #endif
 
+    this->scanStarted = false;
     if (!this->driver) {
         this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
         if (!this->driver) {
@@ -59,6 +60,7 @@ void RpLidarHelper::end() {
 
     RPlidarDriver::DisposeDriver(this->driver);
     this->driver = nullptr;
+    this->scanStarted = false;
 }
 
 JsonResult RpLidarHelper::getDeviceInfo() {
@@ -151,6 +153,7 @@ JsonResult RpLidarHelper::startScan(JsonQuery q) {
         r.errorMessage = "Impossible de démarrer le scan";
         return r;
     }
+    this->scanStarted = true;
     return this->setMotorSpeed(q);
 }
 
@@ -167,6 +170,7 @@ JsonResult RpLidarHelper::stopScan() {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Impossible d'arreter le moteur";
     }
+    this->scanStarted = false;
 
     return r;
 }
@@ -202,6 +206,14 @@ JsonResult RpLidarHelper::grabScanData() {
     r.action = GRAB_DATA;
 
     this->reconnectLidarIfNeeded();
+    if (!this->scanStarted) {
+        JsonQuery q = JsonQuery();
+        q.action = START_SCAN;
+        q.data = json::object();
+        q.data["speed"] = MAX_MOTOR_PWM;
+        startScan(q);
+    }
+
     rplidar_response_measurement_node_hq_t nodes[8192];
     size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
 
