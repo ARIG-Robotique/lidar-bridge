@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <thread>
 #include "RpLidarHelper.h"
 
 void RpLidarHelper::init() {
@@ -12,10 +13,12 @@ void RpLidarHelper::init() {
     cout << "RpLidarHelper::init()" << endl;
 #endif
 
-    this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
-        cerr << "Insufficent memory, exit" << endl;
-        exit(2);
+        this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
+        if (!this->driver) {
+            cerr << "Insufficent memory, exit" << endl;
+            exit(2);
+        }
     }
 
     // try to connect
@@ -34,6 +37,19 @@ void RpLidarHelper::init() {
     */
 }
 
+void RpLidarHelper::reconnectLidarIfNeeded() {
+    JsonResult r = getDeviceInfo();
+    if (r.status == RESPONSE_ERROR) {
+        cerr << "Connection RPLidar perdu, reconnection" << endl;
+        if (this->driver) {
+            RPlidarDriver::DisposeDriver(this->driver);
+            this->driver = nullptr;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        init();
+    }
+}
+
 void RpLidarHelper::end() {
 #ifdef DEBUG_MODE
     cout << "RpLidarHelper::end()" << endl;
@@ -42,6 +58,7 @@ void RpLidarHelper::end() {
     this->driver->disconnect();
 
     RPlidarDriver::DisposeDriver(this->driver);
+    this->driver = nullptr;
 }
 
 JsonResult RpLidarHelper::getDeviceInfo() {
@@ -85,6 +102,8 @@ JsonResult RpLidarHelper::getDeviceInfo() {
 }
 
 JsonResult RpLidarHelper::getHealth() {
+    this->reconnectLidarIfNeeded();
+
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
         JsonResult fail;
@@ -116,6 +135,8 @@ JsonResult RpLidarHelper::getHealth() {
 }
 
 JsonResult RpLidarHelper::startScan(JsonQuery q) {
+    this->reconnectLidarIfNeeded();
+
     if (IS_FAIL(this->driver->startMotor())) {
         JsonResult r;
         r.action = q.action;
@@ -172,6 +193,7 @@ u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
     } else if (speed < 0) {
         speed = 0;
     }
+    this->reconnectLidarIfNeeded();
     return this->driver->setMotorPWM(speed);
 }
 
@@ -179,6 +201,7 @@ JsonResult RpLidarHelper::grabScanData() {
     JsonResult r;
     r.action = GRAB_DATA;
 
+    this->reconnectLidarIfNeeded();
     rplidar_response_measurement_node_hq_t nodes[8192];
     size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
 
