@@ -34,6 +34,7 @@ public:
 
 private:
     RPlidarDriver * driver;
+    bool scanStarted = false;
     unsigned int baudrate;
     //vector<RplidarScanMode> scanModes;
 
