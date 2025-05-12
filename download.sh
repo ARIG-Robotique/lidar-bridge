@@ -35,7 +35,13 @@ if [ ! -f "${RPLIDAR_FILENAME}.zip" ] ; then
   unzip ${RPLIDAR_FILENAME}.zip
   #mv rplidar_sdk-master rplidar_sdk-release-${RPLIDAR_SDK_VERSION}
   #rm -f ${RPLIDAR_SDK_DIR}
-  ln -s rplidar_sdk-release-${RPLIDAR_SDK_VERSION} ${RPLIDAR_SDK_DIR}
+  ln -s ${RPLIDAR_SDK_DIR}-release-${RPLIDAR_SDK_VERSION} ${RPLIDAR_SDK_DIR}
+
+  cd ${DOWNLOAD_DIR}/${RPLIDAR_SDK_DIR}
+  for f in $(ls ${ROOT_DIR}/patch/${RPLIDAR_SDK_DIR}-${RPLIDAR_SDK_VERSION}/*.patch); do
+    echo "---- Apply patch $f"
+    patch --batch -p0 < $f
+  done
 fi
 
 cd ${DOWNLOAD_DIR}
