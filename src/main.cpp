@@ -14,6 +14,15 @@ int main(int argc, const char **argv) {
     string socketType = argv[1];
     string socketConf = argv[2];
 
+    string comFile = "/dev/rplidar";
+    unsigned int baudrate = 115200;
+    if (argc > 4) {
+        comFile = argv[4];
+    }
+    if (argc > 5) {
+        baudrate = atoi(argv[5]);
+    }
+
     // Initialisation de la socket
     SocketHelper socket(socketType);
     if (socket.isUnknown()) {
@@ -32,8 +41,8 @@ int main(int argc, const char **argv) {
     socket.init();
 
     // Initialisation RPLidar
-    RPLidarHelper lidar;
-    lidar.init();
+    auto* lidar = new RPLidarHelper(comFile, baudrate);
+    lidar->init();
 
     bool stop = false, waitConnection = true;
     while (!stop) {
@@ -52,22 +61,22 @@ int main(int argc, const char **argv) {
 
         JsonResult result;
         if (query.action == DEVICE_INFO) {
-            result = lidar.getDeviceInfo();
+            result = lidar->getDeviceInfo();
 
         } else if (query.action == HEALTH_INFO) {
-            result = lidar.getHealth();
+            result = lidar->getHealth();
 
         } else if (query.action == START_SCAN) {
-            result = lidar.startScan(query);
+            result = lidar->startScan(query);
 
         } else if (query.action == STOP_SCAN) {
-            result = lidar.stopScan();
+            result = lidar->stopScan();
 
         } else if (query.action == SET_SPEED) {
-            result = lidar.setMotorSpeed(query);
+            result = lidar->setMotorSpeed(query);
 
         } else if (query.action == GRAB_DATA) {
-            result = lidar.grabScanData();
+            result = lidar->grabScanData();
 
         } else if (query.action == EXIT) {
             cout << "Demande d'arret du programe" << endl;
@@ -87,12 +96,12 @@ int main(int argc, const char **argv) {
     socket.end();
 
     // Arret du lidar
-    lidar.end();
+    lidar->end();
 
     return 0;
 }
 
 void printUsage() {
-    cerr << "Usage socket unix : rplidar_bridge unix /tmp/socket.sock [debug]" << endl;
-    cerr << "Usage socket inet : rplidar_bridge inet 8686 [debug]" << endl;
+    cerr << "Usage socket unix : rplidar_bridge unix /tmp/socket.sock [comFile] [baudrate]" << endl;
+    cerr << "Usage socket inet : rplidar_bridge inet 8686 [comFile] [baudrate]" << endl;
 }
