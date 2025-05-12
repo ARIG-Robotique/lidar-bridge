@@ -85,13 +85,11 @@ execute_process(
 # Compilation de la lib externe RPLidar #
 #########################################
 set(RPLIDAR_LIB_NAME   "_rplidar_sdk")
-set(RPLIDAR_SDK_DIR    "${DOWNLOAD_DIR}/rplidar_sdk/sdk")
+set(RPLIDAR_SDK_DIR    "${DOWNLOAD_DIR}/rplidar_sdk/sdk/sdk")
 
 file(GLOB RPLIDAR_SRCS
         "${RPLIDAR_SDK_DIR}/src/*.cpp"
         "${RPLIDAR_SDK_DIR}/src/hal/*.cpp"
-        "${RPLIDAR_SDK_DIR}/src/dataunpacker/*.cpp"
-        "${RPLIDAR_SDK_DIR}/src/dataunpacker/unpacker/*.cpp"
         "${RPLIDAR_SDK_DIR}/src/arch/${RPLIDAR_ARCH_DIR}/*.cpp"
 )
 

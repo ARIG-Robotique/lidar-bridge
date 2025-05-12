@@ -3,10 +3,10 @@
 ROOT_DIR=$(pwd)
 DOWNLOAD_DIR=${ROOT_DIR}/downloads
 
-RPLIDAR_SDK_VERSION=v2.1.0
+RPLIDAR_SDK_VERSION=v1.12.0
 RPLIDAR_SDK_DIR=rplidar_sdk
 RPLIDAR_FILENAME=${RPLIDAR_SDK_DIR}_${RPLIDAR_SDK_VERSION}
-RPLIDAR_DOWNLOAD_URL=https://github.com/Slamtec/rplidar_sdk/archive/refs/heads/master.zip
+RPLIDAR_DOWNLOAD_URL=https://github.com/Slamtec/rplidar_sdk/archive/refs/tags/release/${RPLIDAR_SDK_VERSION}.zip
 
 LD19LIDAR_SDK_VERSION=v2.3.1
 LD19LIDAR_SDK_DIR=ldlidar_sdk
@@ -33,8 +33,8 @@ if [ ! -f "${RPLIDAR_FILENAME}.zip" ] ; then
   echo "---- Download RPLidar SDK ${RPLIDAR_SDK_VERSION} ..."
   curl -L ${RPLIDAR_DOWNLOAD_URL} -o ${RPLIDAR_FILENAME}.zip
   unzip ${RPLIDAR_FILENAME}.zip
-  mv rplidar_sdk-master rplidar_sdk-release-${RPLIDAR_SDK_VERSION}
-  rm -f ${RPLIDAR_SDK_DIR}
+  #mv rplidar_sdk-master rplidar_sdk-release-${RPLIDAR_SDK_VERSION}
+  #rm -f ${RPLIDAR_SDK_DIR}
   ln -s rplidar_sdk-release-${RPLIDAR_SDK_VERSION} ${RPLIDAR_SDK_DIR}
 fi
 
