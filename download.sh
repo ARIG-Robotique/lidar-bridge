@@ -28,7 +28,13 @@ if [ ! -f "${RPLIDAR_FILENAME}.zip" ] ; then
   echo "---- Download RPLidar SDK ${RPLIDAR_SDK_VERSION} ..."
   curl -L ${RPLIDAR_DOWNLOAD_URL} -o ${RPLIDAR_FILENAME}.zip
   unzip ${RPLIDAR_FILENAME}.zip
-  ln -s rplidar_sdk-release-${RPLIDAR_SDK_VERSION} ${RPLIDAR_SDK_DIR}
+  ln -s ${RPLIDAR_SDK_DIR}-release-${RPLIDAR_SDK_VERSION} ${RPLIDAR_SDK_DIR}
+
+  cd ${DOWNLOAD_DIR}/${RPLIDAR_SDK_DIR}
+  for f in $(ls ${ROOT_DIR}/patch/${RPLIDAR_SDK_DIR}-${RPLIDAR_SDK_VERSION}/*.patch); do
+    echo "---- Apply patch $f"
+    patch --batch -p0 < $f
+  done
 fi
 
 cd ${DOWNLOAD_DIR}
