@@ -1,7 +1,7 @@
 /* RPLIDAR Bridge Application */
 #include <iostream>
 #include "network/SocketHelper.h"
-#include "lidar/slamtech/RpLidarHelper.h"
+#include "lidar/slamtec/RpLidarHelper.h"
 #include "lidar/ldrobot/Ld19LidarHelper.h"
 
 void printUsage();
