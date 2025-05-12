@@ -8,6 +8,10 @@
 
 void RpLidarHelper::init() {
     // create the driver instance
+#ifdef DEBUG_MODE
+    cout << "RpLidarHelper::init()" << endl;
+#endif
+
     this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
         cerr << "Insufficent memory, exit" << endl;
@@ -31,6 +35,9 @@ void RpLidarHelper::init() {
 }
 
 void RpLidarHelper::end() {
+#ifdef DEBUG_MODE
+    cout << "RpLidarHelper::end()" << endl;
+#endif
     this->stopScan();
     this->driver->disconnect();
 
