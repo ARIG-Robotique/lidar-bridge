@@ -20,7 +20,7 @@ using namespace rp::standalone::rplidar;
 class RPLidarHelper {
 
 public:
-    RPLidarHelper(string comFile = "/dev/ttyUSB0", unsigned int baudrate = 115200);
+    RPLidarHelper(string comFile = "/dev/rplidar", unsigned int baudrate = 115200);
 
     void init();
 
