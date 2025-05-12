@@ -6,6 +6,20 @@
 Ce projet ouvre un socket TCP sur le port 50000 afin de recevoir des ordres
 JSON pour piloter le [RPLidar](http://www.slamtec.com/en/Lidar)
 
+## Attention le SDK 1.12 de RPLidar ne se compile pas avec >= C++11
+
+Pour cela il y a deux switch a changer de la sorte :
+
+Avant :
+```c++
+switch (_dataEvt.wait(timeout))
+```
+
+Apres :
+```c++
+switch (static_cast<int>(_dataEvt.wait(timeout)))
+```
+
 ## Messages JSON
 
 ### Récupérer les infos du device
