@@ -74,7 +74,7 @@ checkProgram(unzip)
 #====================================================================#
 #  Setup Project                                                     #
 #====================================================================#
-project(rplidar_bridge)
+project(lidar_bridge)
 
 # Récupération des dépendances par le script de download
 execute_process(

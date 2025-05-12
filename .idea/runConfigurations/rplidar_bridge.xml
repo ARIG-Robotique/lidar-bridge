@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="rplidar_bridge" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="inet 8080" PASS_PARENT_ENVS_2="true" PROJECT_NAME="rplidar_bridge" TARGET_NAME="rplidar_bridge" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="rplidar_bridge" RUN_TARGET_NAME="rplidar_bridge">
-    <method v="2">
-      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-    </method>
-  </configuration>
-</component>

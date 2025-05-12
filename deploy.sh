@@ -12,4 +12,4 @@ echo "Compilation ..."
 ./build.sh "${ROBOT_NAME}"
 
 echo "Déploiement Applicatif ..."
-scp "./build-${ROBOT_NAME}/bin/rplidar_bridge" "${ROBOT_NAME}:$INSTALL_DIR/"
+scp "./build-${ROBOT_NAME}/bin/lidar_bridge" "${ROBOT_NAME}:$INSTALL_DIR/"

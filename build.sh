@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Author : Gregory DEPUILLE
 # Description : Wrapper pour la configuration et le build du projet
-PROJECT="ARIG C++ RPLidar Bridge"
+PROJECT="ARIG C++ Lidar Bridge"
 
 echo "Build du projet ${PROJECT}"
 
