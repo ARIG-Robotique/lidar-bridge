@@ -20,8 +20,8 @@ public:
         this->driver = nullptr;
     }
 
-    void init() override;
-    void end() override;
+    bool connectIfNeeded() override;
+    void disconnect() override;
 
     JsonResult getDeviceInfo() override;
     JsonResult getHealth() override;
@@ -39,7 +39,6 @@ private:
     //vector<RplidarScanMode> scanModes;
 
     u_result setMotorSpeed(_u16 speed);
-    void reconnectLidarIfNeeded();
 };
 
 #endif //LIDAR_BRIDGE_RPLIDARHELPER_H
