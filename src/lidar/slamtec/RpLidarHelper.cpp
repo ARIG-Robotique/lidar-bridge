@@ -7,18 +7,17 @@
 #include <thread>
 #include "RpLidarHelper.h"
 
-void RpLidarHelper::init() {
+bool RpLidarHelper::connectIfNeeded() {
     // create the driver instance
 #ifdef DEBUG_MODE
-    cout << "RpLidarHelper::init()" << endl;
+    cout << "RpLidarHelper::connectIfNeeded()" << endl;
 #endif
 
-    this->scanStarted = false;
     if (!this->driver) {
         this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
         if (!this->driver) {
             cerr << "Insufficent memory, exit" << endl;
-            exit(2);
+            return false;
         }
     }
 
@@ -36,6 +35,8 @@ void RpLidarHelper::init() {
         exit(4);
     }
     */
+
+    return true;
 }
 
 void RpLidarHelper::reconnectLidarIfNeeded() {
@@ -47,13 +48,13 @@ void RpLidarHelper::reconnectLidarIfNeeded() {
             this->driver = nullptr;
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        init();
+        disconnect();
     }
 }
 
-void RpLidarHelper::end() {
+void RpLidarHelper::disconnect() {
 #ifdef DEBUG_MODE
-    cout << "RpLidarHelper::end()" << endl;
+    cout << "RpLidarHelper::disconnect()" << endl;
 #endif
     this->stopScan();
     this->driver->disconnect();
@@ -64,6 +65,8 @@ void RpLidarHelper::end() {
 }
 
 JsonResult RpLidarHelper::getDeviceInfo() {
+    reconnectLidarIfNeeded();
+
     rplidar_response_device_info_t deviceInfo;
     if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
         JsonResult fail;
@@ -104,7 +107,7 @@ JsonResult RpLidarHelper::getDeviceInfo() {
 }
 
 JsonResult RpLidarHelper::getHealth() {
-    this->reconnectLidarIfNeeded();
+    this->connectIfNeeded();
 
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
@@ -137,7 +140,7 @@ JsonResult RpLidarHelper::getHealth() {
 }
 
 JsonResult RpLidarHelper::startScan(JsonQuery q) {
-    this->reconnectLidarIfNeeded();
+    this->connectIfNeeded();
 
     if (IS_FAIL(this->driver->startMotor())) {
         JsonResult r;
@@ -162,15 +165,20 @@ JsonResult RpLidarHelper::stopScan() {
     r.action = STOP_SCAN;
     r.status = RESPONSE_OK;
 
-    if (IS_FAIL(this->driver->stop())) {
+    if (this->driver) {
+        if (IS_FAIL(this->driver->stop())) {
+            r.status = RESPONSE_ERROR;
+            r.errorMessage = "Impossible d'arreter le scan";
+        }
+        if (IS_FAIL(this->driver->stopMotor())) {
+            r.status = RESPONSE_ERROR;
+            r.errorMessage = "Impossible d'arreter le moteur";
+        }
+        this->scanStarted = false;
+    } else {
         r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible d'arreter le scan";
+        r.errorMessage = "Le driver n'est pas initialisé";
     }
-    if (IS_FAIL(this->driver->stopMotor())) {
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible d'arreter le moteur";
-    }
-    this->scanStarted = false;
 
     return r;
 }

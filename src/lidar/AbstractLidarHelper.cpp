@@ -105,6 +105,5 @@ JsonResult AbstractLidarHelper::setConfig(JsonQuery q) {
   cout << " - Exclude Lower Than : " << this->excludeLowerThanMm << " mm" << endl;
   cout << " - Exclude Greater Then : " << this->excludeGreaterThanMm << " mm" << endl;
 
-
   return r;
 }

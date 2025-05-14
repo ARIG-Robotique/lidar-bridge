@@ -23,8 +23,8 @@ public:
     this->excludeGreaterThanMm = 3600;
   }
 
-  virtual void init() = 0;
-  virtual void end() = 0;
+  virtual bool connectIfNeeded() = 0;
+  virtual void disconnect() = 0;
 
   virtual JsonResult getDeviceInfo();
   virtual JsonResult getHealth();
