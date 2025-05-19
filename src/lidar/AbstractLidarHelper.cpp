@@ -96,7 +96,7 @@ JsonResult AbstractLidarHelper::setConfig(JsonQuery q) {
       r.status = RESPONSE_ERROR;
       r.errorMessage = "excludeGreaterThanMm is not an integer number";
     }
-    this->excludeLowerThanMm = q.data["excludeGreaterThanMm"];
+    this->excludeGreaterThanMm = q.data["excludeGreaterThanMm"];
   }
 
   cout << "Configuration du Lidar OK : " << endl;
