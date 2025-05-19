@@ -99,7 +99,7 @@ JsonResult AbstractLidarHelper::setConfig(JsonQuery q) {
     this->excludeGreaterThanMm = q.data["excludeGreaterThanMm"];
   }
 
-  cout << "Configuration du Lidar OK : " << endl;
+  cout << "Configuration du Lidar reçu : " << endl;
   cout << " - Reversed : " << this->reversed << endl;
   cout << " - Angle Offset : " << this->angleOffset << "°" << endl;
   cout << " - Exclude Lower Than : " << this->excludeLowerThanMm << " mm" << endl;

@@ -41,7 +41,7 @@ protected:
   string comFile;
 
   bool reversed;
-  int8_t angleOffset;
+  int16_t angleOffset;
   int16_t excludeLowerThanMm;
   int16_t excludeGreaterThanMm;
 
