@@ -18,7 +18,7 @@ public:
   explicit AbstractLidarHelper(string comFile) {
     this->comFile = std::move(comFile);
     this->reversed = false;
-    this->angleOffset = 0;
+    this->angleOffset = 0.0;
     this->excludeLowerThanMm = 150;
     this->excludeGreaterThanMm = 3600;
   }
@@ -41,7 +41,7 @@ protected:
   string comFile;
 
   bool reversed;
-  int16_t angleOffset;
+  float angleOffset;
   int16_t excludeLowerThanMm;
   int16_t excludeGreaterThanMm;
 
