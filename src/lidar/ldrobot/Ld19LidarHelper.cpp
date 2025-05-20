@@ -77,8 +77,8 @@ JsonResult Ld19LidarHelper::grabScanData() {
       float angleDeg = this->adjustAngle(point.angle);
 
       json scanPoint;
-      scanPoint["angle"] = angleDeg;
-      scanPoint["distance"] = distanceMm;
+      scanPoint["angleDeg"] = angleDeg;
+      scanPoint["distanceMm"] = distanceMm;
       scanPoint["intensity"] = point.intensity;
       this->last_scan.push_back(scanPoint);
     }
