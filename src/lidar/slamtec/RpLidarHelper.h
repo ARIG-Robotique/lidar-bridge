@@ -20,8 +20,8 @@ public:
         this->driver = nullptr;
     }
 
-    void init() override;
-    void end() override;
+    bool connectIfNeeded() override;
+    void disconnect() override;
 
     JsonResult getDeviceInfo() override;
     JsonResult getHealth() override;
@@ -34,8 +34,10 @@ public:
 
 private:
     RPlidarDriver * driver;
+    bool scanStarted = false;
     unsigned int baudrate;
     //vector<RplidarScanMode> scanModes;
+
     u_result setMotorSpeed(_u16 speed);
 };
 

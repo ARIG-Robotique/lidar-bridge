@@ -4,18 +4,21 @@
 
 #include <iostream>
 #include <sstream>
+#include <thread>
 #include "RpLidarHelper.h"
 
-void RpLidarHelper::init() {
+bool RpLidarHelper::connectIfNeeded() {
     // create the driver instance
 #ifdef DEBUG_MODE
-    cout << "RpLidarHelper::init()" << endl;
+    cout << "RpLidarHelper::connectIfNeeded()" << endl;
 #endif
 
-    this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
     if (!this->driver) {
-        cerr << "Insufficent memory, exit" << endl;
-        exit(2);
+        this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
+        if (!this->driver) {
+            cerr << "Insufficent memory, exit" << endl;
+            return false;
+        }
     }
 
     // try to connect
@@ -32,19 +35,38 @@ void RpLidarHelper::init() {
         exit(4);
     }
     */
+
+    return true;
 }
 
-void RpLidarHelper::end() {
+void RpLidarHelper::reconnectLidarIfNeeded() {
+    JsonResult r = getDeviceInfo();
+    if (r.status == RESPONSE_ERROR) {
+        cerr << "Connection RPLidar perdu, reconnection" << endl;
+        if (this->driver) {
+            RPlidarDriver::DisposeDriver(this->driver);
+            this->driver = nullptr;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        disconnect();
+    }
+}
+
+void RpLidarHelper::disconnect() {
 #ifdef DEBUG_MODE
-    cout << "RpLidarHelper::end()" << endl;
+    cout << "RpLidarHelper::disconnect()" << endl;
 #endif
     this->stopScan();
     this->driver->disconnect();
 
     RPlidarDriver::DisposeDriver(this->driver);
+    this->driver = nullptr;
+    this->scanStarted = false;
 }
 
 JsonResult RpLidarHelper::getDeviceInfo() {
+    reconnectLidarIfNeeded();
+
     rplidar_response_device_info_t deviceInfo;
     if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
         JsonResult fail;
@@ -85,6 +107,8 @@ JsonResult RpLidarHelper::getDeviceInfo() {
 }
 
 JsonResult RpLidarHelper::getHealth() {
+    this->connectIfNeeded();
+
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
         JsonResult fail;
@@ -116,6 +140,8 @@ JsonResult RpLidarHelper::getHealth() {
 }
 
 JsonResult RpLidarHelper::startScan(JsonQuery q) {
+    this->connectIfNeeded();
+
     if (IS_FAIL(this->driver->startMotor())) {
         JsonResult r;
         r.action = q.action;
@@ -130,6 +156,7 @@ JsonResult RpLidarHelper::startScan(JsonQuery q) {
         r.errorMessage = "Impossible de démarrer le scan";
         return r;
     }
+    this->scanStarted = true;
     return this->setMotorSpeed(q);
 }
 
@@ -138,13 +165,19 @@ JsonResult RpLidarHelper::stopScan() {
     r.action = STOP_SCAN;
     r.status = RESPONSE_OK;
 
-    if (IS_FAIL(this->driver->stop())) {
+    if (this->driver) {
+        if (IS_FAIL(this->driver->stop())) {
+            r.status = RESPONSE_ERROR;
+            r.errorMessage = "Impossible d'arreter le scan";
+        }
+        if (IS_FAIL(this->driver->stopMotor())) {
+            r.status = RESPONSE_ERROR;
+            r.errorMessage = "Impossible d'arreter le moteur";
+        }
+        this->scanStarted = false;
+    } else {
         r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible d'arreter le scan";
-    }
-    if (IS_FAIL(this->driver->stopMotor())) {
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible d'arreter le moteur";
+        r.errorMessage = "Le driver n'est pas initialisé";
     }
 
     return r;
@@ -172,12 +205,22 @@ u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
     } else if (speed < 0) {
         speed = 0;
     }
+    this->reconnectLidarIfNeeded();
     return this->driver->setMotorPWM(speed);
 }
 
 JsonResult RpLidarHelper::grabScanData() {
     JsonResult r;
     r.action = GRAB_DATA;
+
+    this->reconnectLidarIfNeeded();
+    if (!this->scanStarted) {
+        JsonQuery q = JsonQuery();
+        q.action = START_SCAN;
+        q.data = json::object();
+        q.data["speed"] = MAX_MOTOR_PWM;
+        startScan(q);
+    }
 
     rplidar_response_measurement_node_hq_t nodes[8192];
     size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
