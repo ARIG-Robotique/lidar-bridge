@@ -24,17 +24,17 @@ int main(int argc, const char **argv) {
         baudrate = atoi(argv[5]);
     }
 
+    // Check Lidar driver is known
+    if (lidarDriver != "rplidar" && lidarDriver != "ldlidar") {
+        printUsage();
+        return 3;
+    }
+
     // Initialisation de la socket
     SocketHelper socket(socketType);
     if (socket.isUnknown()) {
         printUsage();
         return 2;
-    }
-
-    // Check Lidar driver is known
-    if (lidarDriver != "rplidar" && lidarDriver != "ldlidar") {
-        printUsage();
-        return 3;
     }
 
     if (socket.isInet()) {
