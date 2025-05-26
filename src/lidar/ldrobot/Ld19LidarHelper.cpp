@@ -4,38 +4,73 @@
 
 #include "Ld19LidarHelper.h"
 
-void Ld19LidarHelper::init() {
+bool Ld19LidarHelper::connectIfNeeded() {
   // Create driver instance
-  this->driver = new ldlidar::LiPkg();
-
-  this->cmd_port = new ldlidar::CmdInterfaceLinux();
-  cmd_port->SetReadCallback(std::bind(&ldlidar::LiPkg::CommReadCallback, this->driver, std::placeholders::_1, std::placeholders::_2));
-  if (cmd_port->Open(this->comFile)) {
-    std::cout << "[LDRobot] Open LDLiDAR device " << this->comFile << " success!" << std::endl;
-  } else {
-    std::cerr << "[LDRobot] Open LDLiDAR device " << this->comFile << " fail!" << std::endl;
-    exit(3);
+  if (isConnected())
+  {
+    return true;
   }
+  
+
+  if (!driver)
+  {
+    this->driver = unique_ptr<ldlidar::LiPkg>(new ldlidar::LiPkg());
+  }
+  if (!cmd_port && driver)
+  {
+    this->cmd_port = unique_ptr<ldlidar::CmdInterfaceLinux>(new ldlidar::CmdInterfaceLinux());
+    if (cmd_port)
+    {
+      cmd_port->SetReadCallback(std::bind(&ldlidar::LiPkg::CommReadCallback, this->driver.get(), std::placeholders::_1, std::placeholders::_2));
+    }
+  }
+  
+  
+  
+  if (!cmd_port->IsOpened())
+  {
+    if (cmd_port->Open(this->comFile)) {
+      std::cout << "[LDRobot] Open LDLiDAR device " << this->comFile << " success!" << std::endl;
+      return true;
+    } else {
+      std::cerr << "[LDRobot] Open LDLiDAR device " << this->comFile << " fail!" << std::endl;
+      return false;
+    }
+  }
+  return true;
 }
 
-void Ld19LidarHelper::end() {
+void Ld19LidarHelper::disconnect() {
   this->cmd_port->Close();
-  delete this->cmd_port;
   this->cmd_port = nullptr;
 
-  delete this->driver;
   this->driver = nullptr;
 
   this->last_scan.clear();
 }
 
+
+bool Ld19LidarHelper::isConnected() 
+{
+  if (!cmd_port)
+  {
+    return false;
+  }
+  if (!driver)
+  {
+    return false;
+  }
+  
+  return cmd_port->IsOpened();
+}
+
 JsonResult Ld19LidarHelper::getDeviceInfo() {
-  json data;
+  JsonResult r;
+  json &data = r.data;
   data["driver"] = "ldlidar";
   data["firmwareVersion"] = this->driver->GetSdkVersionNumber();
   data["speedHz"] = this->driver->GetSpeed();
 
-  JsonResult r;
   r.status = RESPONSE_OK;
   r.action = DEVICE_INFO;
   r.data = data;
@@ -43,12 +78,12 @@ JsonResult Ld19LidarHelper::getDeviceInfo() {
 }
 
 JsonResult Ld19LidarHelper::getHealth() {
-  json data;
+  JsonResult r;
+  json &data = r.data;
   data["value"] = 0;
-  data["state"] = "OK";
+  data["state"] = isConnected() ? "OK" : "KO";
   data["errorCode"] = 0;
 
-  JsonResult r;
   r.status = RESPONSE_OK;
   r.action = DEVICE_INFO;
   r.data = data;
@@ -56,8 +91,17 @@ JsonResult Ld19LidarHelper::getHealth() {
 }
 
 JsonResult Ld19LidarHelper::grabScanData() {
+  connectIfNeeded();
   JsonResult r;
   r.action = GRAB_DATA;
+
+  if (!isConnected())
+  {
+    r.status = RESPONSE_ERROR;
+    r.errorMessage = "Pas connecté";
+    return r;
+  }
+  
 
   if (this->driver->IsFrameReady()) {
     this->driver->ResetFrameReady();
@@ -89,6 +133,7 @@ JsonResult Ld19LidarHelper::grabScanData() {
 
     r.status = RESPONSE_ERROR;
     r.errorMessage = "Erreur de timeout sur la récupération des données du SCAN";
+    cmd_port = nullptr;
 
   } else if (!this->last_scan.empty()) {
     r.status = RESPONSE_OK;

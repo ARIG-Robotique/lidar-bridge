@@ -19,9 +19,9 @@ public:
         this->baudrate = baudrate;
         this->driver = nullptr;
     }
-
     bool connectIfNeeded() override;
     void disconnect() override;
+    bool isConnected() override;
 
     JsonResult getDeviceInfo() override;
     JsonResult getHealth() override;

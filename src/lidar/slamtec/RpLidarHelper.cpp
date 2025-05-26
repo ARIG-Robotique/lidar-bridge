@@ -7,25 +7,35 @@
 #include <thread>
 #include "RpLidarHelper.h"
 
+
 bool RpLidarHelper::connectIfNeeded() {
     // create the driver instance
 #ifdef DEBUG_MODE
     cout << "RpLidarHelper::connectIfNeeded()" << endl;
 #endif
 
-    if (!this->driver) {
-        this->driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
-        if (!this->driver) {
+    //early exit if we're connected
+    if (isConnected())
+    {
+        return true;
+    }
+
+    //create driver object
+    if (driver == nullptr) {
+        driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
+        if (driver == nullptr) {
             cerr << "Insufficent memory, exit" << endl;
             return false;
         }
     }
 
     // try to connect
-    if (IS_FAIL(this->driver->connect(this->comFile.c_str(), this->baudrate))) {
+    if (IS_FAIL(driver->connect(this->comFile.c_str(), this->baudrate))) {
         cerr << "Error, cannot bind to the specified serial port " << this->comFile << endl;
-        exit(3);
+        return false;
     }
+
+    cout << "Lidar connected" << endl;
 
     // NON SUPPORTER PAR LES VIEUX FIRMWARE
     // get scan modes
@@ -37,19 +47,6 @@ bool RpLidarHelper::connectIfNeeded() {
     */
 
     return true;
-}
-
-void RpLidarHelper::reconnectLidarIfNeeded() {
-    JsonResult r = getDeviceInfo();
-    if (r.status == RESPONSE_ERROR) {
-        cerr << "Connection RPLidar perdu, reconnection" << endl;
-        if (this->driver) {
-            RPlidarDriver::DisposeDriver(this->driver);
-            this->driver = nullptr;
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        disconnect();
-    }
 }
 
 void RpLidarHelper::disconnect() {
@@ -64,8 +61,17 @@ void RpLidarHelper::disconnect() {
     this->scanStarted = false;
 }
 
+bool RpLidarHelper::isConnected() 
+{
+    if (driver == nullptr)
+    {
+        return false;
+    }
+    return driver->isConnected();
+    
+}
+
 JsonResult RpLidarHelper::getDeviceInfo() {
-    reconnectLidarIfNeeded();
 
     rplidar_response_device_info_t deviceInfo;
     if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
@@ -107,7 +113,16 @@ JsonResult RpLidarHelper::getDeviceInfo() {
 }
 
 JsonResult RpLidarHelper::getHealth() {
-    this->connectIfNeeded();
+
+    if (!isConnected())
+    {
+        JsonResult fail;
+        fail.status = RESPONSE_ERROR;
+        fail.action = HEALTH_INFO;
+        fail.errorMessage = "Déconnecté";
+        return fail;
+    }
+    
 
     rplidar_response_device_health_t healthinfo;
     if (IS_FAIL(this->driver->getHealth(healthinfo))) {
@@ -127,12 +142,12 @@ JsonResult RpLidarHelper::getHealth() {
         state = "OK";
     }
 
-    json data;
+    JsonResult r;
+    json &data = r.data;
     data["value"] = healthinfo.status;
     data["state"] = state;
     data["errorCode"] = (unsigned int) healthinfo.error_code;
 
-    JsonResult r;
     r.status = RESPONSE_OK;
     r.action = DEVICE_INFO;
     r.data = data;
@@ -205,7 +220,7 @@ u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
     } else if (speed < 0) {
         speed = 0;
     }
-    this->reconnectLidarIfNeeded();
+    this->connectIfNeeded();
     return this->driver->setMotorPWM(speed);
 }
 
@@ -213,7 +228,7 @@ JsonResult RpLidarHelper::grabScanData() {
     JsonResult r;
     r.action = GRAB_DATA;
 
-    this->reconnectLidarIfNeeded();
+    this->connectIfNeeded();
     if (!this->scanStarted) {
         JsonQuery q = JsonQuery();
         q.action = START_SCAN;
@@ -254,6 +269,7 @@ JsonResult RpLidarHelper::grabScanData() {
     } else {
         r.status = RESPONSE_ERROR;
         r.errorMessage = "Erreur lors de la récupération des données du SCAN";
+        disconnect();
     }
 
     return r;

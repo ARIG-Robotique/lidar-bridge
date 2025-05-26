@@ -5,6 +5,7 @@
 #ifndef LIDAR_BRIDGE_LD19LIDARHELPER_H
 #define LIDAR_BRIDGE_LD19LIDARHELPER_H
 #include <lipkg.h>
+#include <memory>
 #include "../AbstractLidarHelper.h"
 
 
@@ -20,8 +21,9 @@ public:
         this->last_scan_read_time = std::chrono::steady_clock::now();
     }
 
-    void init() override;
-    void end() override;
+    bool connectIfNeeded() override;
+    void disconnect() override;
+    bool isConnected() override;
 
     JsonResult getDeviceInfo() override;
     JsonResult getHealth() override;
@@ -29,8 +31,8 @@ public:
     JsonResult grabScanData() override;
 
 private:
-    ldlidar::LiPkg *driver;
-    ldlidar::CmdInterfaceLinux *cmd_port;
+    std::unique_ptr<ldlidar::LiPkg> driver;
+    std::unique_ptr<ldlidar::CmdInterfaceLinux> cmd_port;
 
     unsigned int last_ignored;
     json last_scan;

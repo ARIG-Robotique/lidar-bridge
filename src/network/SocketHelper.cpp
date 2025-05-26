@@ -81,6 +81,16 @@ void SocketHelper::initSocketInet() {
     serv_addr_inet.sin_addr.s_addr = INADDR_ANY; // automatically be filled with current host's IP address
     serv_addr_inet.sin_port = htons(this->port); // convert short integer value for port must be converted into network byte order
 
+    const int enable = 1;
+	if (setsockopt(serverSockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		cerr << "setsockopt(SO_REUSEADDR) failed" << endl;
+	}
+	if (setsockopt(serverSockfd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
+	{
+		cerr << "setsockopt(SO_REUSEPORT) failed" << endl;
+	}
+
     // bind(int fd, struct sockaddr *local_addr, socklen_t addr_length)
     // bind() passes file descriptor, the address structure,
     // and the length of the address structure
@@ -110,6 +120,16 @@ void SocketHelper::initSocketUnix() {
     /* setup the host_addr structure for use in bind call */
     serv_addr_un.sun_family = AF_UNIX; // server byte order
     strcpy(serv_addr_un.sun_path, this->socketFile.c_str());
+
+	const int enable = 1;
+	if (setsockopt(serverSockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		cerr << "setsockopt(SO_REUSEADDR) failed" << endl;
+	}
+	if (setsockopt(serverSockfd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
+	{
+		cerr << "setsockopt(SO_REUSEPORT) failed" << endl;
+	}
 
     // bind(int fd, struct sockaddr *local_addr, socklen_t addr_length)
     // bind() passes file descriptor, the address structure,

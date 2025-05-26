@@ -56,7 +56,7 @@ int main(int argc, const char **argv) {
     } else if (lidarDriver == "ldlidar") {
         lidar = new Ld19LidarHelper(comFile);
     }
-    lidar->init();
+    lidar->connectIfNeeded();
 
     bool stop = false, waitConnection = true;
     while (!stop) {
@@ -102,7 +102,7 @@ int main(int argc, const char **argv) {
 
         } else {
             result.status = RESPONSE_ERROR;
-            result.errorMessage = "Action non supporté";
+            result.errorMessage = "Action non supportée";
         }
 
         result.action = query.action;
@@ -113,7 +113,7 @@ int main(int argc, const char **argv) {
     socket.end();
 
     // Arret du lidar
-    lidar->end();
+    lidar->disconnect();
 
     return 0;
 }
