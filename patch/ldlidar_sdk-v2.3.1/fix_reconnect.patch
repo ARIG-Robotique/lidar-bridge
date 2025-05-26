@@ -1,0 +1,11 @@
+--- include/ldlidar_driver/cmd_interface_linux.cpp.orig	2022-05-30 21:43:38.000000000 +0200
++++ include/ldlidar_driver/cmd_interface_linux.cpp	2025-05-26 21:10:35.910071436 +0200
+@@ -24,7 +24,7 @@
+ #define MAX_ACK_BUF_LEN 4096
+ 
+ CmdInterfaceLinux::CmdInterfaceLinux()
+-    : rx_thread_(nullptr), rx_count_(0), read_callback_(nullptr) {
++    : rx_thread_(nullptr), rx_count_(0), read_callback_(nullptr), is_cmd_opened_(false) {
+   com_handle_ = -1;
+ }
+ 

@@ -56,6 +56,12 @@ if [ ! -f "${LD19LIDAR_FILENAME}.zip" ] ; then
   mv ldlidar_stl_sdk ldlidar_sdk-release-${LD19LIDAR_SDK_VERSION}
   rm -f ${LD19LIDAR_SDK_DIR}
   ln -s ldlidar_sdk-release-${LD19LIDAR_SDK_VERSION} ${LD19LIDAR_SDK_DIR}
+
+  cd ${DOWNLOAD_DIR}/${LD19LIDAR_SDK_DIR}
+  for f in $(ls ${ROOT_DIR}/patch/${LD19LIDAR_SDK_DIR}-${LD19LIDAR_SDK_VERSION}/*.patch); do
+    echo "---- Apply patch $f"
+    patch --batch -p0 < $f
+  done
 fi
 
 cd ${DOWNLOAD_DIR}
