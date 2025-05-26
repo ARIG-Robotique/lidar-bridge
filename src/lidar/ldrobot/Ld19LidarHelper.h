@@ -21,6 +21,18 @@ public:
         this->last_scan_read_time = std::chrono::steady_clock::now();
     }
 
+    ~Ld19LidarHelper()
+    {
+        if (cmd_port)
+        {
+            delete cmd_port;
+        }
+        if (driver)
+        {
+            delete driver;
+        }
+    }
+
     bool connectIfNeeded() override;
     void disconnect() override;
     bool isConnected() override;
@@ -31,8 +43,9 @@ public:
     JsonResult grabScanData() override;
 
 private:
-    std::unique_ptr<ldlidar::LiPkg> driver;
-    std::unique_ptr<ldlidar::CmdInterfaceLinux> cmd_port;
+    bool connected = false;
+    ldlidar::LiPkg *driver;
+    ldlidar::CmdInterfaceLinux *cmd_port;
 
     unsigned int last_ignored;
     json last_scan;

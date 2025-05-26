@@ -14,26 +14,27 @@ bool Ld19LidarHelper::connectIfNeeded() {
 
   if (!driver)
   {
-    this->driver = unique_ptr<ldlidar::LiPkg>(new ldlidar::LiPkg());
+    this->driver = new ldlidar::LiPkg();
   }
   if (!cmd_port && driver)
   {
-    this->cmd_port = unique_ptr<ldlidar::CmdInterfaceLinux>(new ldlidar::CmdInterfaceLinux());
+    this->cmd_port = new ldlidar::CmdInterfaceLinux();
     if (cmd_port)
     {
-      cmd_port->SetReadCallback(std::bind(&ldlidar::LiPkg::CommReadCallback, this->driver.get(), std::placeholders::_1, std::placeholders::_2));
+      cmd_port->SetReadCallback(std::bind(&ldlidar::LiPkg::CommReadCallback, this->driver, std::placeholders::_1, std::placeholders::_2));
+      cout << "Read callback bound !" << endl;
     }
   }
   
-  
-  
-  if (!cmd_port->IsOpened())
+  if (cmd_port && !cmd_port->IsOpened())
   {
     if (cmd_port->Open(this->comFile)) {
       std::cout << "[LDRobot] Open LDLiDAR device " << this->comFile << " success!" << std::endl;
+      this->last_scan_read_time = std::chrono::steady_clock::now();
       return true;
     } else {
       std::cerr << "[LDRobot] Open LDLiDAR device " << this->comFile << " fail!" << std::endl;
+      disconnect();
       return false;
     }
   }
@@ -41,7 +42,15 @@ bool Ld19LidarHelper::connectIfNeeded() {
 }
 
 void Ld19LidarHelper::disconnect() {
-  this->cmd_port->Close();
+  if (driver)
+  {
+    delete driver;
+  }
+  if (cmd_port)
+  {
+    this->cmd_port->Close();
+    delete cmd_port;
+  }
   this->cmd_port = nullptr;
 
   this->driver = nullptr;
@@ -65,6 +74,14 @@ bool Ld19LidarHelper::isConnected()
 }
 
 JsonResult Ld19LidarHelper::getDeviceInfo() {
+  if (!driver)
+  {
+    JsonResult r;
+    r.status = RESPONSE_ERROR;
+    r.action = DEVICE_INFO;
+    return r;
+  }
+  
   JsonResult r;
   json &data = r.data;
   data["driver"] = "ldlidar";
@@ -133,7 +150,8 @@ JsonResult Ld19LidarHelper::grabScanData() {
 
     r.status = RESPONSE_ERROR;
     r.errorMessage = "Erreur de timeout sur la récupération des données du SCAN";
-    cmd_port = nullptr;
+    disconnect();
+    
 
   } else if (!this->last_scan.empty()) {
     r.status = RESPONSE_OK;
