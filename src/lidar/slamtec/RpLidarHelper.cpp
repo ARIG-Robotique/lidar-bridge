@@ -8,269 +8,293 @@
 #include "RpLidarHelper.h"
 
 
-bool RpLidarHelper::connectIfNeeded() {
-    // create the driver instance
-#ifdef DEBUG_MODE
-    cout << "RpLidarHelper::connectIfNeeded()" << endl;
-#endif
-
-    //early exit if we're connected
-    if (isConnected())
-    {
-        return true;
-    }
-
-    //create driver object
-    if (driver == nullptr) {
-        driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
-        if (driver == nullptr) {
-            cerr << "Insufficent memory, exit" << endl;
-            return false;
-        }
-    }
-
-    // try to connect
-    if (IS_FAIL(driver->connect(this->comFile.c_str(), this->baudrate))) {
-        cerr << "Error, cannot bind to the specified serial port " << this->comFile << endl;
-        return false;
-    }
-
-    cout << "Lidar connected" << endl;
-
-    // NON SUPPORTER PAR LES VIEUX FIRMWARE
-    // get scan modes
-    /*
-    if (IS_FAIL(this->driver->getAllSupportedScanModes(this->scanModes))) {
-        cerr << "Error, cannot get all supported scan modes";
-        exit(4);
-    }
-    */
-
-    return true;
+bool RpLidarHelper::connectIfNeeded()
+{
+	//early exit if we're connected
+	if (isConnected())
+	{
+		return true;
+	}
+	//create driver object
+	if (driver == nullptr) {
+		driver = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
+		if (driver == nullptr) {
+			cerr << "Insufficent memory, exit" << endl;
+			return false;
+		}
+	}
+	// try to connect
+	if (IS_FAIL(driver->connect(this->comFile.c_str(), this->baudrate))) {
+		cerr << "Error, cannot bind to the specified serial port " << this->comFile << endl;
+		return false;
+	}
+	cout << "Lidar connected" << endl;
+	return true;
 }
 
 void RpLidarHelper::disconnect() {
 #ifdef DEBUG_MODE
-    cout << "RpLidarHelper::disconnect()" << endl;
+	cout << "RpLidarHelper::disconnect()" << endl;
 #endif
-    this->stopScan();
-    this->driver->disconnect();
+	if (scanStarted)
+	{
+		scanStarted = false;
+		this->stopScan();
+	}
+	if (driver)
+	{
+		if (driver->isConnected())
+		{
+			this->driver->disconnect();
 
-    RPlidarDriver::DisposeDriver(this->driver);
-    this->driver = nullptr;
-    this->scanStarted = false;
+		}
+		RPlidarDriver::DisposeDriver(this->driver);
+	}
+	this->driver = nullptr;
+	this->scanStarted = false;
 }
 
 bool RpLidarHelper::isConnected() 
 {
-    if (driver == nullptr)
-    {
-        return false;
-    }
-    return driver->isConnected();
-    
+	if (driver == nullptr)
+	{
+		return false;
+	}
+	return driver->isConnected() && fileExists();
+	
 }
 
 JsonResult RpLidarHelper::getDeviceInfo() {
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = DEVICE_INFO;
+		return fail;
+	}
+	
+	
+	rplidar_response_device_info_t deviceInfo;
+	if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
+		JsonResult fail;
+		fail.status = RESPONSE_ERROR;
+		fail.action = DEVICE_INFO;
+		fail.errorMessage = "Impossible de récupérer les infos";
+		return fail;
+	}
 
-    rplidar_response_device_info_t deviceInfo;
-    if (IS_FAIL(this->driver->getDeviceInfo(deviceInfo))) {
-        JsonResult fail;
-        fail.status = RESPONSE_ERROR;
-        fail.action = DEVICE_INFO;
-        fail.errorMessage = "Impossible de récupérer les infos";
-        return fail;
-    }
+	// Récupération du numéro de série
+	ostringstream serialStream;
+	for (unsigned char v : deviceInfo.serialnum) {
+		char buff[3];
+		snprintf(buff, sizeof(buff), "%02X", v);
+		string tmp = buff;
+		serialStream << tmp;
+	}
 
-    // Récupération du numéro de série
-    ostringstream serialStream;
-    for (unsigned char v : deviceInfo.serialnum) {
-        char buff[3];
-        snprintf(buff, sizeof(buff), "%02X", v);
-        string tmp = buff;
-        serialStream << tmp;
-    }
+	// Récupération du firmware
+	ostringstream firmStream;
+	firmStream << (deviceInfo.firmware_version >> 8) << "." << (deviceInfo.firmware_version & 0xFF);
+	if ((deviceInfo.firmware_version & 0xFF) <= 10) {
+		firmStream << "0";
+	}
 
-    // Récupération du firmware
-    ostringstream firmStream;
-    firmStream << (deviceInfo.firmware_version >> 8) << "." << (deviceInfo.firmware_version & 0xFF);
-    if ((deviceInfo.firmware_version & 0xFF) <= 10) {
-        firmStream << "0";
-    }
+	json data;
+	data["driver"] = "rplidar";
+	data["serialNumber"] = serialStream.str();
+	data["hardwareVersion"] = deviceInfo.hardware_version;
+	data["firmwareVersion"] = firmStream.str();
+	//data["scanModes"] = this->scanModes;
 
-    json data;
-    data["driver"] = "rplidar";
-    data["serialNumber"] = serialStream.str();
-    data["hardwareVersion"] = deviceInfo.hardware_version;
-    data["firmwareVersion"] = firmStream.str();
-    //data["scanModes"] = this->scanModes;
-
-    JsonResult r;
-    r.status = RESPONSE_OK;
-    r.action = DEVICE_INFO;
-    r.data = data;
-    return r;
+	JsonResult r;
+	r.status = RESPONSE_OK;
+	r.action = DEVICE_INFO;
+	r.data = data;
+	return r;
 }
 
 JsonResult RpLidarHelper::getHealth() {
 
-    if (!isConnected())
-    {
-        JsonResult fail;
-        fail.status = RESPONSE_ERROR;
-        fail.action = HEALTH_INFO;
-        fail.errorMessage = "Déconnecté";
-        return fail;
-    }
-    
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = HEALTH_INFO;
+		return fail;
+	}
+	
 
-    rplidar_response_device_health_t healthinfo;
-    if (IS_FAIL(this->driver->getHealth(healthinfo))) {
-        JsonResult fail;
-        fail.status = RESPONSE_ERROR;
-        fail.action = HEALTH_INFO;
-        fail.errorMessage = "Impossible de récupérer les infos de santé";
-        return fail;
-    }
+	rplidar_response_device_health_t healthinfo;
+	if (IS_FAIL(this->driver->getHealth(healthinfo))) {
+		JsonResult fail;
+		fail.status = RESPONSE_ERROR;
+		fail.action = HEALTH_INFO;
+		fail.errorMessage = "Impossible de récupérer les infos de santé";
+		return fail;
+	}
 
-    string state;
-    if (healthinfo.status == RPLIDAR_STATUS_ERROR) {
-        state = "ERROR";
-    } else if (healthinfo.status == RPLIDAR_STATUS_WARNING) {
-        state = "WARNING";
-    } else {
-        state = "OK";
-    }
+	string state;
+	if (healthinfo.status == RPLIDAR_STATUS_ERROR) {
+		state = "ERROR";
+	} else if (healthinfo.status == RPLIDAR_STATUS_WARNING) {
+		state = "WARNING";
+	} else {
+		state = "OK";
+	}
 
-    JsonResult r;
-    json &data = r.data;
-    data["value"] = healthinfo.status;
-    data["state"] = state;
-    data["errorCode"] = (unsigned int) healthinfo.error_code;
+	JsonResult r;
+	json &data = r.data;
+	data["value"] = healthinfo.status;
+	data["state"] = state;
+	data["errorCode"] = (unsigned int) healthinfo.error_code;
 
-    r.status = RESPONSE_OK;
-    r.action = DEVICE_INFO;
-    r.data = data;
-    return r;
+	r.status = RESPONSE_OK;
+	r.action = DEVICE_INFO;
+	r.data = data;
+	return r;
 }
 
 JsonResult RpLidarHelper::startScan(JsonQuery q) {
-    this->connectIfNeeded();
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = q.action;
+		return fail;
+	}
 
-    if (IS_FAIL(this->driver->startMotor())) {
-        JsonResult r;
-        r.action = q.action;
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible de démarrer le moteur";
-        return r;
-    };
-    if (IS_FAIL(this->driver->startScan(false, true))) {
-        JsonResult r;
-        r.action = q.action;
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Impossible de démarrer le scan";
-        return r;
-    }
-    this->scanStarted = true;
-    return this->setMotorSpeed(q);
+	if (IS_FAIL(this->driver->startMotor())) {
+		JsonResult r;
+		r.action = q.action;
+		r.status = RESPONSE_ERROR;
+		r.errorMessage = "Impossible de démarrer le moteur";
+		return r;
+	};
+	if (IS_FAIL(this->driver->startScan(false, true))) {
+		JsonResult r;
+		r.action = q.action;
+		r.status = RESPONSE_ERROR;
+		r.errorMessage = "Impossible de démarrer le scan";
+		return r;
+	}
+	this->scanStarted = true;
+	return this->setMotorSpeed(q);
 }
 
 JsonResult RpLidarHelper::stopScan() {
-    JsonResult r;
-    r.action = STOP_SCAN;
-    r.status = RESPONSE_OK;
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = STOP_SCAN;
+		return fail;
+	}
+	JsonResult r;
+	r.action = STOP_SCAN;
+	r.status = RESPONSE_OK;
 
-    if (this->driver) {
-        if (IS_FAIL(this->driver->stop())) {
-            r.status = RESPONSE_ERROR;
-            r.errorMessage = "Impossible d'arreter le scan";
-        }
-        if (IS_FAIL(this->driver->stopMotor())) {
-            r.status = RESPONSE_ERROR;
-            r.errorMessage = "Impossible d'arreter le moteur";
-        }
-        this->scanStarted = false;
-    } else {
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Le driver n'est pas initialisé";
-    }
+	if (this->driver) {
+		if (IS_FAIL(this->driver->stop())) {
+			r.status = RESPONSE_ERROR;
+			r.errorMessage = "Impossible d'arreter le scan";
+		}
+		if (IS_FAIL(this->driver->stopMotor())) {
+			r.status = RESPONSE_ERROR;
+			r.errorMessage = "Impossible d'arreter le moteur";
+		}
+		this->scanStarted = false;
+	} else {
+		r.status = RESPONSE_ERROR;
+		r.errorMessage = "Le driver n'est pas initialisé";
+	}
 
-    return r;
+	return r;
 }
 
 JsonResult RpLidarHelper::setMotorSpeed(JsonQuery q) {
-    JsonResult r;
-    r.action = q.action;
-    r.data = q.data;
-    u_result result = RESULT_OK;
-    if (!q.data["speed"].is_null()) {
-        result = this->setMotorSpeed(q.data["speed"]);
-    }
-    if (IS_FAIL(result)) {
-        r.status = RESPONSE_ERROR;
-    } else {
-        r.status = RESPONSE_OK;
-    }
-    return r;
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = q.action;
+		return fail;
+	}
+	JsonResult r;
+	r.action = q.action;
+	r.data = q.data;
+	u_result result = RESULT_OK;
+	if (!q.data["speed"].is_null()) {
+		last_motor_speed = q.data["speed"];
+		result = this->setMotorSpeed(last_motor_speed);
+	}
+	if (IS_FAIL(result)) {
+		r.status = RESPONSE_ERROR;
+	} else {
+		r.status = RESPONSE_OK;
+	}
+	return r;
 }
 
 u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
-    if (speed > MAX_MOTOR_PWM) {
-        speed = MAX_MOTOR_PWM;
-    } else if (speed < 0) {
-        speed = 0;
-    }
-    this->connectIfNeeded();
-    return this->driver->setMotorPWM(speed);
+	if (speed > MAX_MOTOR_PWM) {
+		speed = MAX_MOTOR_PWM;
+	} else if (speed < 0) {
+		speed = 0;
+	}
+	if (!Autoconnect())
+	{
+		return RESULT_RECONNECTING;
+	}
+	return this->driver->setMotorPWM(speed);
 }
 
 JsonResult RpLidarHelper::grabScanData() {
-    JsonResult r;
-    r.action = GRAB_DATA;
+	JsonResult r;
+	r.action = GRAB_DATA;
 
-    this->connectIfNeeded();
-    if (!this->scanStarted) {
-        JsonQuery q = JsonQuery();
-        q.action = START_SCAN;
-        q.data = json::object();
-        q.data["speed"] = MAX_MOTOR_PWM;
-        startScan(q);
-    }
+	if (!Autoconnect())
+	{
+		auto fail = getDisconnectedResponse();
+		fail.action = r.action;
+		return fail;
+	}
+	if (!this->scanStarted) {
+		JsonQuery q = JsonQuery();
+		q.action = START_SCAN;
+		q.data = json::object();
+		q.data["speed"] = last_motor_speed;
+		startScan(q);
+	}
 
-    rplidar_response_measurement_node_hq_t nodes[8192];
-    size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
+	rplidar_response_measurement_node_hq_t nodes[8192];
+	size_t nodeCount = sizeof(nodes)/sizeof(rplidar_response_measurement_node_hq_t);
 
-    u_result resScan = this->driver->grabScanDataHq(nodes, nodeCount);
-    u_result resAscend = this->driver->ascendScanData(nodes, nodeCount);
-    if (IS_OK(resScan) && IS_OK(resAscend)) {
-        r.status = RESPONSE_OK;
+	u_result resScan = this->driver->grabScanDataHq(nodes, nodeCount);
+	u_result resAscend = this->driver->ascendScanData(nodes, nodeCount);
+	if (IS_OK(resScan) && IS_OK(resAscend)) {
+		r.status = RESPONSE_OK;
 
-        int ignored = 0;
-        json scanData = json::array();
-        for (auto node : nodes) {
-            float distanceMm = node.dist_mm_q2 / 4.0f;
-            if ((distanceMm < this->excludeLowerThanMm) || (distanceMm > this->excludeGreaterThanMm)) {
-                ignored++;
-                continue;
-            }
+		int ignored = 0;
+		json scanData = json::array();
+		for (auto node : nodes) {
+			float distanceMm = node.dist_mm_q2 / 4.0f;
+			if ((distanceMm < this->excludeLowerThanMm) || (distanceMm > this->excludeGreaterThanMm)) {
+				ignored++;
+				continue;
+			}
 
-            float angleDeg = this->adjustAngle((node.angle_z_q14 * 90.0f) / 16384.0f);
+			float angleDeg = this->adjustAngle((node.angle_z_q14 * 90.0f) / 16384.0f);
 
-            json v;
-            v["angleDeg"] = angleDeg;
-            v["distanceMm"] = distanceMm;
-            v["syncBit"] = node.flag;
-            v["quality"] = node.quality;
-            scanData.push_back(v);
-        }
+			json v;
+			v["angleDeg"] = angleDeg;
+			v["distanceMm"] = distanceMm;
+			v["syncBit"] = node.flag;
+			v["quality"] = node.quality;
+			scanData.push_back(v);
+		}
 
-        r.data["ignored"] = ignored;
-        r.data["scan"] = scanData;
-    } else {
-        r.status = RESPONSE_ERROR;
-        r.errorMessage = "Erreur lors de la récupération des données du SCAN";
-        disconnect();
-    }
+		r.data["ignored"] = ignored;
+		r.data["scan"] = scanData;
+	} else {
+		r.status = RESPONSE_ERROR;
+		r.errorMessage = "Erreur lors de la récupération des données du SCAN";
+		disconnect();
+	}
 
-    return r;
+	return r;
 }

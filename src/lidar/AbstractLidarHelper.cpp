@@ -6,6 +6,40 @@
 
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
+
+bool AbstractLidarHelper::fileExists()
+{
+  struct stat buffer;   
+  return (stat (comFile.c_str(), &buffer) == 0); 
+} 
+
+bool AbstractLidarHelper::Autoconnect() {
+	// create the driver instance
+#ifdef DEBUG_MODE
+	cout << "AbstractLidarHelper::Autoconnect()" << endl;
+#endif
+
+	if (fileExists())
+	{
+		//Should be connected or connecting
+		return connectIfNeeded();
+	}
+	else
+	{
+		//Should be disconnected or disconnecting
+		disconnect();
+		return false;
+	}
+}
+
+JsonResult AbstractLidarHelper::getDisconnectedResponse()
+{
+  JsonResult r;
+  r.status = RESPONSE_ERROR;
+  r.errorMessage = "Déconnecté";
+  return r;
+}
 
 JsonResult AbstractLidarHelper::getDeviceInfo() {
   return notImplemented(DEVICE_INFO);

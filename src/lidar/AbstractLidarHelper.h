@@ -23,9 +23,14 @@ public:
     this->excludeGreaterThanMm = 3600;
   }
 
+  bool fileExists(); 
+
+  virtual bool Autoconnect();
   virtual bool connectIfNeeded() = 0;
   virtual void disconnect() = 0;
   virtual bool isConnected() = 0;
+
+  JsonResult getDisconnectedResponse();
 
   virtual JsonResult getDeviceInfo();
   virtual JsonResult getHealth();

@@ -18,6 +18,7 @@ public:
     RpLidarHelper(const string &comFile, unsigned int baudrate) : AbstractLidarHelper(comFile) {
         this->baudrate = baudrate;
         this->driver = nullptr;
+        last_motor_speed = MAX_MOTOR_PWM;
     }
     bool connectIfNeeded() override;
     void disconnect() override;
@@ -36,6 +37,7 @@ private:
     RPlidarDriver * driver;
     bool scanStarted = false;
     unsigned int baudrate;
+    uint16_t last_motor_speed;
     //vector<RplidarScanMode> scanModes;
 
     u_result setMotorSpeed(_u16 speed);
