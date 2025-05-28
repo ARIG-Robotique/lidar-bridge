@@ -66,7 +66,10 @@ def update():
 	plt.pause(.1)
 
 while 1:
-	update()
+	try:
+		update()
+	except:
+		pass
 
 plt.show()
 
