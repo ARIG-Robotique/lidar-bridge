@@ -17,7 +17,7 @@ bool AbstractLidarHelper::fileExists()
 bool AbstractLidarHelper::Autoconnect() {
 	// create the driver instance
 #ifdef DEBUG_MODE
-	cout << "AbstractLidarHelper::Autoconnect()" << endl;
+	//cout << "AbstractLidarHelper::Autoconnect()" << endl;
 #endif
 
 	if (fileExists())

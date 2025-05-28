@@ -204,7 +204,7 @@ JsonQuery SocketHelper::getQuery(void) {
         try {
             json jsonValue = json::parse(buffer);
 #ifdef DEBUG_MODE
-            cout << "Requête client : " << jsonValue.dump(2) << endl;
+            cout << "Requête client : " << jsonValue.dump(-1) << endl;
 #endif
             q.action = jsonValue["action"];
             q.data = jsonValue["data"];
@@ -228,7 +228,7 @@ void SocketHelper::sendResponse(JsonResult response) {
     r["data"] = response.data;
 
 #ifdef DEBUG_MODE
-    cout << "Réponse au client : " << r.dump(2) << endl;
+    cout << "Réponse au client : " << r.dump(-1).substr(0, 128) << endl;
 #endif
 
     ostringstream outStr;

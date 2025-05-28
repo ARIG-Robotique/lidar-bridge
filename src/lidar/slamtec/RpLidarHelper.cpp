@@ -174,6 +174,9 @@ JsonResult RpLidarHelper::startScan(JsonQuery q) {
 		r.errorMessage = "Impossible de démarrer le scan";
 		return r;
 	}
+#ifdef DEBUG_MODE
+	cout << "Démarrage du scan" <<endl;
+#endif
 	this->scanStarted = true;
 	return this->setMotorSpeed(q);
 }
@@ -240,6 +243,9 @@ u_result RpLidarHelper::setMotorSpeed(_u16 speed) {
 	{
 		return RESULT_RECONNECTING;
 	}
+#ifdef DEBUG_MODE
+	cout << "Démarrage du moteur, vitesse " << speed <<endl;
+#endif
 	return this->driver->setMotorPWM(speed);
 }
 
@@ -271,7 +277,9 @@ JsonResult RpLidarHelper::grabScanData() {
 
 		int ignored = 0;
 		json scanData = json::array();
-		for (auto node : nodes) {
+		for (size_t i = 0; i < nodeCount; i++)
+		{
+			auto &node = nodes[i];
 			float distanceMm = node.dist_mm_q2 / 4.0f;
 			if ((distanceMm < this->excludeLowerThanMm) || (distanceMm > this->excludeGreaterThanMm)) {
 				ignored++;
